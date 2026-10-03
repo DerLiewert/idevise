@@ -1,19 +1,6 @@
 "use server";
 import { getSupabase } from "@/lib/supabase/server";
-import { Database } from "@/shared/api/database.types";
-import { revalidatePath } from "next/cache";
-import { SpecificationGroup } from "./specification-group";
-
-export type SpecificationsTable =
-  Database["public"]["Tables"]["specifications"];
-
-export type Specification = SpecificationsTable["Row"];
-export type SpecificationResponse = Pick<Specification, "id" | "name"> & {
-  group: SpecificationGroup;
-};
-
-export type SpecificationsInsert = SpecificationsTable["Insert"];
-export type SpecificationsUpdate = SpecificationsTable["Update"];
+import { SpecificationsInsert, Specification, SpecificationsUpdate } from "../model";
 
 //========== CREATE ============================================================
 export const createSpecification = async (payload: SpecificationsInsert) => {
@@ -26,13 +13,14 @@ export const createSpecification = async (payload: SpecificationsInsert) => {
     .single();
 
   if (error) {
-    if (error.code === "23505") {
-      throw new Error(
-        "Характеирика с таким именем уже существует для этой группы",
-      );
+    switch (error.code) {
+      case "23505":
+        throw new Error(
+          "Характеирика с таким именем уже существует для этой группы.",
+        );
+      default:
+        throw new Error("Не удалось создать характеирику.");
     }
-
-    throw new Error("Не удалось создать характеирику. Code: " + error.code);
   }
 
   return data;
@@ -55,31 +43,37 @@ export const getSpecifications = async () => {
     )
     .order("id", { ascending: true });
 
-  if (error) throw error;
+  if (error) throw new Error("Не удалось получить список характеристик.");
 
   return data;
 };
 
 //========== UPDATE ============================================================
-export const updateSpecification = async (payload: Specification) => {
+export const updateSpecification = async (
+  id: number,
+  payload: SpecificationsUpdate,
+) => {
   const supabase = await getSupabase();
 
-  const { id, ...changes } = payload;
+  const { id: _, ...params } = payload;
   const { data, error } = await supabase
     .from("specifications")
-    .update(changes)
+    .update(params)
     .eq("id", id)
     .select("*")
     .single();
 
   if (error) {
-    if (error.code === "23505") {
-      throw new Error(
-        "Характеирика с таким именем уже существует для этой группы",
-      );
+    switch (error.code) {
+      case "23505":
+        throw new Error(
+          "Характеирика с таким именем уже существует для этой группы.",
+        );
+      case "PGRST116":
+        throw new Error("Характеирика не найдена.");
+      default:
+        throw new Error("Не удалось обновить характеирику.");
     }
-
-    throw new Error("Не удалось создать характеирику. Code: " + error.code);
   }
 
   return data;
@@ -91,7 +85,7 @@ export const deleteSpecification = async (id: number) => {
 
   const { error } = await supabase.from("specifications").delete().eq("id", id);
 
-  if (error) throw error;
+  if (error) throw new Error("Не удалось удалить характеристику.");
 };
 
 export const deleteSpecifications = async (ids: number[]) => {
@@ -102,7 +96,5 @@ export const deleteSpecifications = async (ids: number[]) => {
     .delete()
     .in("id", ids);
 
-  if (error) throw error;
-
-  // revalidatePath("/admin/specifications");
+  if (error) throw new Error("Не удалось произвести удаление характеристик.");
 };

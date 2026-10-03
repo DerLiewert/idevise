@@ -1,25 +1,17 @@
 "use client";
-import z from "zod";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import {
-  createSpecificationsGroup,
-  updateSpecificationsGroup,
-} from "../api/specification-group";
-import { useRouter } from "next/navigation";
+import { GroupFormData, GroupSchema } from "../model";
+import { createSpecificationsGroup, updateSpecificationsGroup } from "../api";
 import {
   Button,
   Field,
   FieldDescription,
+  FieldError,
   FieldLabel,
   Input,
 } from "@/shared/ui";
-
-const GroupSchema = z.object({
-  name: z.string().trim().min(1, "Введите название группы характеристик"),
-});
-
-type GroupFormData = z.output<typeof GroupSchema>;
 
 type FormGroupProps = { onSuccess?: () => void } & (
   | { role: "add"; defaultValues?: never; group_id?: never }
@@ -74,17 +66,19 @@ export const FormGroup = ({
           <Controller
             name={"name"}
             control={control}
-            render={({ field }) => (
-              <Input
-                {...field}
-                type="text"
-                placeholder={
-                  role === "edit"
-                    ? "Прошлое значение: " + defaultValues.name
-                    : ""
-                }
-                aria-invalid={errors[field.name] ? "true" : "false"}
-              />
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  {...field}
+                  type="text"
+                  placeholder={
+                    role === "edit"
+                      ? "Прошлое значение: " + defaultValues.name
+                      : ""
+                  }
+                  aria-invalid={errors[field.name] ? "true" : "false"}
+                />
+              </>
             )}
           />
           <Button className="w-60" type="submit">

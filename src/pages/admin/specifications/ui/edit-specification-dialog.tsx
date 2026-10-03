@@ -1,7 +1,6 @@
 import { Dialog, DialogContent } from "@/shared/ui";
 import { FormSpecification } from "./form-specification";
-import { SpecificationGroup } from "../api/specification-group";
-import { SpecificationResponse } from "../api/specification";
+import { SpecificationGroup, SpecificationResponse } from "../model";
 
 type EditGroupDialog = {
   onClose: () => void;
@@ -26,7 +25,7 @@ export const EditSpecificationDialog = ({
           <FormSpecification
             role="edit"
             onSuccess={onClose}
-            defaultValues={{name:item.name, group_id:item.group.id}}
+            defaultValues={{ name: item.name, group_id: item.group.id }}
             specification_id={item.id}
             groups={groups}
           />

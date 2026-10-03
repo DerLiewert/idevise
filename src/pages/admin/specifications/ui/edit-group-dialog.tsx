@@ -1,6 +1,6 @@
 import { Dialog, DialogContent } from "@/shared/ui";
 import { FormGroup } from "./form-group";
-import { SpecificationGroup } from "../api/specification-group";
+import { SpecificationGroup } from "../model";
 
 type EditGroupDialog = {
   item: SpecificationGroup | null;

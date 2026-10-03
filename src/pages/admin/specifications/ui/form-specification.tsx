@@ -1,7 +1,13 @@
 "use client";
-import z from "zod";
+import { useRouter } from "next/navigation";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { createSpecification, updateSpecification } from "../api";
+import {
+  SpecificationFormData,
+  SpecificationGroup,
+  SpecificationSchema,
+} from "../model";
 import {
   Button,
   Field,
@@ -13,31 +19,30 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui";
-import { createSpecification, updateSpecification } from "../api/specification";
-import { useRouter } from "next/navigation";
-import { SpecificationGroup } from "../api/specification-group";
 
-const SpecificationSchema = z.object({
-  name: z.string().trim().min(1, "Введите название группы характеристик"),
-  group_id: z.number("Выберите группу"),
-});
-
-type SpecificationFormData = z.output<typeof SpecificationSchema>;
-
-type FormSpecificationProps = {
+type FormSpecificationBase = {
   onSuccess?: () => void;
   groups: SpecificationGroup[];
-} & (
-  | { role: "add"; defaultValues?: never; specification_id?: never }
-  | {
-      role: "edit";
-      defaultValues: SpecificationFormData;
-      specification_id: number;
-    }
-);
+};
+
+type FormSpecificationAdd = {
+  role: "add";
+  defaultValues?: never;
+  specification_id?: never;
+};
+
+type FormSpecificationEdit = {
+  role: "edit";
+  defaultValues: SpecificationFormData;
+  specification_id: number;
+};
+
+type FormSpecificationProps = FormSpecificationBase &
+  (FormSpecificationAdd | FormSpecificationEdit);
 
 export const FormSpecification = ({
   onSuccess,
@@ -67,13 +72,15 @@ export const FormSpecification = ({
     ...groups,
   ].map((group) => ({ label: group.name, value: group.id }));
 
-  const handleFormSubmit: SubmitHandler<SpecificationFormData> = async (data) => {
+  const handleFormSubmit: SubmitHandler<SpecificationFormData> = async (
+    data,
+  ) => {
     try {
       if (role === "add") {
         await createSpecification(data);
         resetField("name");
       } else {
-        await updateSpecification({ id: specification_id, ...data });
+        await updateSpecification(specification_id, data);
         reset();
       }
 
@@ -88,8 +95,6 @@ export const FormSpecification = ({
             : `Не удалось ${role === "add" ? "создать" : "обновить"} характеристику`,
       });
     }
-
-    router.refresh();
   };
 
   return (
@@ -117,6 +122,11 @@ export const FormSpecification = ({
                         {opt.label}
                       </SelectItem>
                     ))}
+                    {groups.length === 0 && (
+                      <SelectLabel>
+                        Не создано ни одной группы характеристик
+                      </SelectLabel>
+                    )}
                   </SelectGroup>
                 </SelectContent>
               </Select>

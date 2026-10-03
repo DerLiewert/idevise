@@ -1,11 +1,9 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui";
-import { getSpecificationsGroup } from "../api/specification-group";
+import { SpecificationGroup } from "../model";
 import { FormGroup } from "./form-group";
 import { FormSpecification } from "./form-specification";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui";
 
-export const TabsForm = async () => {
-  const groups = await getSpecificationsGroup();
-
+export const FormTabs = ({ groups }: { groups: SpecificationGroup[] }) => {
   return (
     <Tabs defaultValue="groups" className="gap-4">
       <div className="overflow-x-auto overflow-y-hidden pb-0.5">
@@ -18,12 +16,10 @@ export const TabsForm = async () => {
       </div>
 
       <TabsContent value="groups">
-        {/* <FormAddGroup /> */}
         <FormGroup role="add" />
       </TabsContent>
       <TabsContent value="specifications">
-        {/* <FormAddSpecification groups={groups} /> */}
-        <FormSpecification role='add' groups={groups} />
+        <FormSpecification role="add" groups={groups} />
       </TabsContent>
     </Tabs>
   );
